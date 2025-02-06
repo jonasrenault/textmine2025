@@ -51,9 +51,7 @@ def test_get_possible_relations():
 
 def test_get_all_possible_relations():
     entities = [
-        Entity(
-            id=0, type="FIRE", mentions=[Mention(value="brûlé", start=510, end=515)]
-        ),
+        Entity(id=0, type="FIRE", mentions=[Mention(value="brûlé", start=510, end=515)]),
         Entity(id=1, type="PLACE", mentions=[Mention(value="Lyon", start=64, end=68)]),
     ]
     relations = set(
@@ -94,12 +92,8 @@ def test_get_all_possible_relations():
             Relation(type="HAS_CONTROL_OVER", head=entities[1], tail=entities[0]),
             Relation(type="IS_COOPERATING_WITH", head=entities[0], tail=entities[1]),
             Relation(type="IS_COOPERATING_WITH", head=entities[1], tail=entities[0]),
-            Relation(
-                type="HAS_FAMILY_RELATIONSHIP", head=entities[0], tail=entities[1]
-            ),
-            Relation(
-                type="HAS_FAMILY_RELATIONSHIP", head=entities[1], tail=entities[0]
-            ),
+            Relation(type="HAS_FAMILY_RELATIONSHIP", head=entities[0], tail=entities[1]),
+            Relation(type="HAS_FAMILY_RELATIONSHIP", head=entities[1], tail=entities[0]),
         )
     )
     assert get_all_possible_relations(entities) == relations
