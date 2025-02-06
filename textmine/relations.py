@@ -1,8 +1,8 @@
 from itertools import product
 
 from pydantic import BaseModel
-from textmine.entities import Entity, get_entity_types
 
+from textmine.entities import Entity, get_entity_types
 
 RELATIONS = {
     "IS_LOCATED_IN": (["ACTOR", "EVENT", "PLACE"], ["PLACE"]),
@@ -46,6 +46,50 @@ RELATIONS = {
     "HAS_LATITUDE": (["PLACE"], ["LATITUDE"]),
 }
 
+TEMPLATES = {
+    "ACTOR_IS_LOCATED_IN": "is {head} located in {tail}?",
+    "PLACE_IS_LOCATED_IN": "is {head} located in {tail}?",
+    "EVENT_IS_LOCATED_IN": "does the event {head} happen in {tail}?",
+    "IS_OF_NATIONALITY": "is {head} of {tail} nationaly?",
+    "CREATED": "did {head} create {tail}?",
+    "HAS_CONTROL_OVER": "does {head} control {tail}?",
+    "INITIATED": "did {head} initiate {tail}?",
+    "IS_AT_ODDS_WITH": "is {head} at odds with {tail}?",
+    "IS_COOPERATING_WITH": "is {head} cooperating with {tail}?",
+    "IS_IN_CONTACT_WITH": "is {head} in contact with {tail}?",
+    "IS_PART_OF": "is {head} part of {tail}?",
+    "DEATHS_NUMBER": "is {tail} the number of casualties for {head}?",
+    "INJURED_NUMBER": "is {tail} the number of people injured by {head}?",
+    "END_DATE": "is {tail} the end date for {head}?",
+    "START_DATE": "is {tail} the start date for {head}?",
+    "HAS_CONSEQUENCE": "is {tail} the consequence of {head}?",
+    "STARTED_IN": "did {head} start in {tail}?",
+    "HAS_COLOR": "does {head} have the color {tail}?",
+    "HAS_FOR_HEIGHT": "is {tail} the height of {head}?",
+    "HAS_FOR_LENGTH": "is {tail} the length of {head}?",
+    "HAS_FOR_WIDTH": "is {tail} the width of {head}?",
+    "HAS_QUANTITY": "is {tail} the quantity of {head}?",
+    "IS_REGISTERED_AS": "is {tail} the reference of {head}?",
+    "WEIGHS": "is {tail} the weight of {head}?",
+    "WAS_CREATED_IN": "was {head} created in {head}?",
+    "WAS_DISSOLVED_IN": "was {head} dissolved in {head}?",
+    "OPERATES_IN": "does {head} operate in {head}?",
+    "IS_OF_SIZE": "is {tail} the size of {head}?",
+    "DIED_IN": "did {head} die in {tail}?",
+    "IS_DEAD_ON": "did {head} die on {tail}?",
+    "HAS_CATEGORY": "is {head} a {tail}?",
+    "HAS_FAMILY_RELATIONSHIP": "is {head} related to {tail}?",
+    "GENDER_FEMALE": "is {head} a woman?",
+    "GENDER_MALE": "is {head} a man?",
+    "HAS_FIRST_NAME": "is {tail} {head}'s first name?",
+    "HAS_LAST_NAME": "is {tail} {head}'s last name?",
+    "RESIDES_IN": "does {head} reside in {tail}?",
+    "IS_BORN_ON": "was {head} born on {tail}?",
+    "IS_BORN_IN": "was {head} born in {tail}?",
+    "HAS_LONGITUDE": "is {tail} the longitutude of {head}?",
+    "HAS_LATITUDE": "is {tail} the latitude of {head}?",
+}
+
 
 class Relation(BaseModel, frozen=True):  # type: ignore
     type: str
@@ -75,6 +119,15 @@ def get_possible_relations(head_entity_type: str, tail_entity_type: str) -> set[
 
 
 def get_all_possible_relations(entities: list[Entity]) -> set[Relation]:
+    """
+    Get the set of all possible relations between all pairs of given entities.
+
+    Args:
+        entities (list[Entity]): a list of entities.
+
+    Returns:
+        set[Relation]: the set of all possible relations between the entities.
+    """
     relations = set()
     for head, tail in product(entities, repeat=2):
         if head.id == tail.id:
@@ -86,3 +139,15 @@ def get_all_possible_relations(entities: list[Entity]) -> set[Relation]:
                 if rel not in ("GENDER_MALE", "GENDER_FEMALE"):
                     relations.add(Relation(type=rel, head=head, tail=tail))
     return relations
+
+
+def get_template(relation: Relation) -> str:
+    key = relation.type
+    if relation.type == "IS_LOCATED_IN":
+        key = (
+            (get_entity_types(relation.head.type) & {"ACTOR", "EVENT", "PLACE"}).pop()
+            + "_"
+            + relation.type
+        )
+
+    return TEMPLATES[key].format(head=relation.head.mention, tail=relation.tail.mention)

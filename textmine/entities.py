@@ -84,6 +84,10 @@ class Entity(BaseModel):
     def __hash__(self):
         return self.id.__hash__()
 
+    @property
+    def mention(self) -> str:
+        return self.mentions[0].value
+
 
 def get_entity_types(entity_type: str) -> set[str]:
     """

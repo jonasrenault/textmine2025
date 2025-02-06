@@ -3,6 +3,7 @@ from textmine.relations import (
     Relation,
     get_all_possible_relations,
     get_possible_relations,
+    get_template,
 )
 
 
@@ -102,3 +103,39 @@ def test_get_all_possible_relations():
         )
     )
     assert get_all_possible_relations(entities) == relations
+
+
+def test_get_template():
+    relation = Relation(
+        type="IS_LOCATED_IN",
+        head=Entity(
+            id=8,
+            type="CIVILIAN",
+            mentions=[
+                Mention(value="Arthur Abert", start=404, end=416),
+            ],
+        ),
+        tail=Entity(
+            id=1, type="PLACE", mentions=[Mention(value="Lyon", start=64, end=68)]
+        ),
+    )
+    assert get_template(relation) == "is Arthur Abert located in Lyon?"
+
+    relation = Relation(
+        type="GENDER_MALE",
+        head=Entity(
+            id=8,
+            type="CIVILIAN",
+            mentions=[
+                Mention(value="Arthur Abert", start=404, end=416),
+            ],
+        ),
+        tail=Entity(
+            id=8,
+            type="CIVILIAN",
+            mentions=[
+                Mention(value="Arthur Abert", start=404, end=416),
+            ],
+        ),
+    )
+    assert get_template(relation) == "is Arthur Abert a man?"
