@@ -1,4 +1,12 @@
-from textmine.entities import get_entity_types
+import json
+from pathlib import Path
+
+import pandas as pd
+from pydantic import TypeAdapter
+
+from textmine.entities import Entity, get_entity_types
+
+ROOT_DIR = Path(__file__).parent.parent
 
 
 def test_get_parents():
@@ -37,3 +45,14 @@ def test_get_parents():
         "LATITUDE",
         "ATTRIBUTE",
     }
+
+
+def test_parse_entities():
+    ta = TypeAdapter(list[Entity])
+    train_df = pd.read_csv(ROOT_DIR / "resources/train.csv")
+    train_df = train_df.set_index("id")
+    train_df.entities = train_df.entities.apply(ta.validate_json)
+    train_df.relations = train_df.relations.apply(json.loads)
+
+    for entity in train_df.sample(1).entities.values[0]:
+        assert type(entity) is Entity

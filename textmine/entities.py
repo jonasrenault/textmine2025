@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+
+
 ENTITY_TYPE_PARENTS = {
     "EPIDEMIC": "LARGE_SCALE_EVENT",
     "BOMBING": "CRIMINAL_EVENT",
@@ -65,6 +68,21 @@ ENTITY_TYPE_PARENTS = {
     "TIME": "ATTRIBUTE",
     "ACTOR": "ENTITY",
 }
+
+
+class Mention(BaseModel):
+    value: str
+    start: int
+    end: int
+
+
+class Entity(BaseModel):
+    id: int
+    type: str
+    mentions: list[Mention]
+
+    def __hash__(self):
+        return self.id.__hash__()
 
 
 def get_entity_types(entity_type: str) -> set[str]:

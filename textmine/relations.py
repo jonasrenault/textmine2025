@@ -1,4 +1,7 @@
-from textmine.entities import get_entity_types
+from itertools import product
+
+from pydantic import BaseModel
+from textmine.entities import Entity, get_entity_types
 
 
 RELATIONS = {
@@ -44,6 +47,12 @@ RELATIONS = {
 }
 
 
+class Relation(BaseModel, frozen=True):  # type: ignore
+    type: str
+    head: Entity
+    tail: Entity
+
+
 def get_possible_relations(head_entity_type: str, tail_entity_type: str) -> set[str]:
     """
     Get the set of possible relations given the head and tail entities' types.
@@ -62,4 +71,17 @@ def get_possible_relations(head_entity_type: str, tail_entity_type: str) -> set[
         for relation, (head, tail) in RELATIONS.items()
         if head_types & set(head) and tail_types & set(tail)
     )
+    return relations
+
+
+def get_all_possible_relations(entities: list[Entity]) -> set[Relation]:
+    relations = set()
+    for head, tail in product(entities, repeat=2):
+        if head.id == tail.id:
+            if "PERSON" in get_entity_types(head.type):
+                relations.add(Relation(type="GENDER_FEMALE", head=head, tail=tail))
+                relations.add(Relation(type="GENDER_MALE", head=head, tail=tail))
+        else:
+            for rel in get_possible_relations(head.type, tail.type):
+                relations.add(Relation(type=rel, head=head, tail=tail))
     return relations
