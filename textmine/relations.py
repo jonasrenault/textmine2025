@@ -83,5 +83,6 @@ def get_all_possible_relations(entities: list[Entity]) -> set[Relation]:
                 relations.add(Relation(type="GENDER_MALE", head=head, tail=tail))
         else:
             for rel in get_possible_relations(head.type, tail.type):
-                relations.add(Relation(type=rel, head=head, tail=tail))
+                if rel not in ("GENDER_MALE", "GENDER_FEMALE"):
+                    relations.add(Relation(type=rel, head=head, tail=tail))
     return relations

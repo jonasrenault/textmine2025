@@ -62,3 +62,43 @@ def test_get_all_possible_relations():
         )
     )
     assert get_all_possible_relations(entities) == relations
+
+    entities = [
+        Entity(
+            id=8,
+            type="CIVILIAN",
+            mentions=[
+                Mention(value="Arthur Abert", start=404, end=416),
+            ],
+        ),
+        Entity(
+            id=1,
+            type="TERRORIST_OR_CRIMINAL",
+            mentions=[
+                Mention(value="Lino Abert", start=49, end=59),
+            ],
+        ),
+    ]
+    relations = set(
+        (
+            Relation(type="GENDER_MALE", head=entities[0], tail=entities[0]),
+            Relation(type="GENDER_MALE", head=entities[1], tail=entities[1]),
+            Relation(type="GENDER_FEMALE", head=entities[0], tail=entities[0]),
+            Relation(type="GENDER_FEMALE", head=entities[1], tail=entities[1]),
+            Relation(type="IS_AT_ODDS_WITH", head=entities[0], tail=entities[1]),
+            Relation(type="IS_AT_ODDS_WITH", head=entities[1], tail=entities[0]),
+            Relation(type="IS_IN_CONTACT_WITH", head=entities[0], tail=entities[1]),
+            Relation(type="IS_IN_CONTACT_WITH", head=entities[1], tail=entities[0]),
+            Relation(type="HAS_CONTROL_OVER", head=entities[0], tail=entities[1]),
+            Relation(type="HAS_CONTROL_OVER", head=entities[1], tail=entities[0]),
+            Relation(type="IS_COOPERATING_WITH", head=entities[0], tail=entities[1]),
+            Relation(type="IS_COOPERATING_WITH", head=entities[1], tail=entities[0]),
+            Relation(
+                type="HAS_FAMILY_RELATIONSHIP", head=entities[0], tail=entities[1]
+            ),
+            Relation(
+                type="HAS_FAMILY_RELATIONSHIP", head=entities[1], tail=entities[0]
+            ),
+        )
+    )
+    assert get_all_possible_relations(entities) == relations
