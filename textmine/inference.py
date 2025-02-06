@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from textmine.entities import Entity, Mention
 from textmine.relations import Relation, get_template
@@ -39,7 +39,8 @@ class DeepSeekInferenceModel(RelationInferenceModel):
 
     def predict(self, text, relation):
         template = get_template(relation)
-        prompt = f"In the following text in french, {template} Answer with yes or no only.\n\ntext: {text}"
+        prompt = f"In the following text in french, {template} "
+        f"Answer with yes or no only.\n\ntext: {text}"
 
         conversation = [{"role": "user", "content": prompt}]
         input_ids = self.tokenizer.apply_chat_template(
@@ -59,7 +60,7 @@ class DeepSeekInferenceModel(RelationInferenceModel):
 
 if __name__ == "__main__":
     model = DeepSeekInferenceModel()
-    text = 'Un important incendie a fait des ravages dans une forêt en Autriche. Le départ de feu a été provoqué par le mégot d’une cigarette mal éteinte, jetée par un conducteur de poids lourd. Il aura fallu plusieurs bombardiers d’eau ainsi que des efforts au sol pour parvenir à éteindre le brasier. L\'action a été coordonnée par le Major Duverney. Les pompiers se sont équipés de masques sur le visage et de bouteilles d’air comprimé, ainsi que de combinaisons \nignifugées pour combattre le feu au sol. L’ONG "ECO+" a déploré cet évènement qu’elle qualifie de criminel car, dans la forêt en partie incendiée, se trouvaient des espèces animales protégées.'
+    text = 'Un important incendie a fait des ravages dans une forêt en Autriche. Le départ de feu a été provoqué par le mégot d’une cigarette mal éteinte, jetée par un conducteur de poids lourd. Il aura fallu plusieurs bombardiers d’eau ainsi que des efforts au sol pour parvenir à éteindre le brasier. L\'action a été coordonnée par le Major Duverney. Les pompiers se sont équipés de masques sur le visage et de bouteilles d’air comprimé, ainsi que de combinaisons \nignifugées pour combattre le feu au sol. L’ONG "ECO+" a déploré cet évènement qu’elle qualifie de criminel car, dans la forêt en partie incendiée, se trouvaient des espèces animales protégées.'  # noqa: E501
 
     relation = Relation(
         type="HAS_CATEGORY",

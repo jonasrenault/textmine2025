@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 ENTITY_TYPE_PARENTS = {
     "EPIDEMIC": "LARGE_SCALE_EVENT",
     "BOMBING": "CRIMINAL_EVENT",
