@@ -1,6 +1,5 @@
 import json
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -66,11 +65,12 @@ def evaluate(
     eval_df = eval_df.set_index("id")
     eval_df.entities = eval_df.entities.apply(ta.validate_json)
     eval_df.relations = eval_df.relations.apply(json.loads)
-    eval_df["predictions"] = pd.Series(dtype="object")
-
-    # if text_idx is not None, select row with text_idx
-    if text_idx is not None:
-        eval_df = eval_df.loc[[text_idx]]
+    if "predictions" not in eval_df.columns:
+        eval_df["predictions"] = pd.Series(dtype="object")
+    else:
+        eval_df.predictions = eval_df.predictions.apply(
+            lambda pred: json.loads(pred) if pd.notna(pred) else pred
+        )
 
     # load relation prediction model
     rel_model = TransformersInferenceModel(
@@ -79,11 +79,15 @@ def evaluate(
         device=device,
     )
 
-    print(f"Running predictions on {eval_df.shape[0]} rows.")
+    # if text_idx is not None, select row with text_idx
+    rows = eval_df
+    if text_idx is not None:
+        rows = eval_df.loc[[text_idx]]
+    print(f"Running predictions on {rows.shape[0]} rows.")
 
     # predict relations for each item in the eval dataframe
     metrics = Metrics()
-    for index, row in tqdm(eval_df.iterrows()):
+    for index, row in tqdm(rows.iterrows()):
         relations = get_all_possible_relations(row.entities)
         print(
             f"Running predictions for row {index} with "
@@ -116,10 +120,7 @@ def evaluate(
     eval_df.entities = eval_df.entities.apply(
         lambda ents: json.dumps(ents, default=pydantic_encoder)
     )
-    output_df = input_df.with_stem(
-        input_df.stem + f"_pred_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}"
-    )
-    eval_df.to_csv(output_df)
+    eval_df.to_csv(input_df)
 
 
 if __name__ == "__main__":

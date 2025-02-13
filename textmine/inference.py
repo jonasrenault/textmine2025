@@ -64,12 +64,16 @@ class TransformersInferenceModel(RelationInferenceModel):
             for stop_word in stop_words
         ]
 
+        # https://github.com/AdrienGuille/TextMine2025/tree/main sets do_sample to False
+        # and num_beams to 1. Not sure it's the best params. Maybe set do_sample to True
+        # and set temperature.
         self.model.generate(
             inputs["input_ids"],
             streamer=streamer,
-            max_new_tokens=100,
-            do_sample=True,
-            temperature=0.5,
+            max_new_tokens=10,
+            num_beams=1,
+            do_sample=False,
+            # temperature=0.5,
             eos_token_id=self.terminators + stop_token_ids,
             pad_token_id=self.tokenizer.eos_token_id,
             attention_mask=inputs["attention_mask"],
