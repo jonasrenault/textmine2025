@@ -4,7 +4,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 
 from textmine.entities import Entity, Mention
-from textmine.relations import Relation, get_template
+from textmine.relations import Relation, get_all_possible_relations, get_template
 
 
 class RelationInferenceModel(ABC):
@@ -56,8 +56,10 @@ class TransformersInferenceModel(RelationInferenceModel):
 
         stop_words = ["Yes", "No"]
         stop_token_ids = [
-            self.tokenizer(x, return_tensors="pt", add_special_tokens=False)["input_ids"]
-            for x in stop_words
+            self.tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
+                "input_ids"
+            ].squeeze()
+            for stop_word in stop_words
         ]
 
         self.model.generate(
@@ -71,8 +73,32 @@ class TransformersInferenceModel(RelationInferenceModel):
 
         outputs = []
         for text in streamer:
-            outputs.append(text)
-        return "".join(outputs)
+            outputs.append(text.lower())
+
+        return "yes" in "".join(outputs)
+
+
+def predict(
+    model: RelationInferenceModel, text: str, entities: list[Entity]
+) -> set[Relation]:
+    """
+    Use RelationInference model to make predictions on possible relations
+    between entities present in given text.
+
+    Args:
+        model (RelationInferenceModel): the inference model.
+        text (str): the text.
+        entities (list[Entity]): the list of entities in the text.
+
+    Returns:
+        set[Relation]: set of predicted relations.
+    """
+    predictions = set(
+        relation
+        for relation in get_all_possible_relations(entities)
+        if model.predict(text, relation)
+    )
+    return predictions
 
 
 if __name__ == "__main__":

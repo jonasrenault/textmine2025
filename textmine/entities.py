@@ -85,7 +85,7 @@ class Entity(BaseModel):
 
     @property
     def mention(self) -> str:
-        return self.mentions[0].value
+        return sorted(self.mentions, key=lambda m: len(m.value))[-1].value
 
 
 def get_entity_types(entity_type: str) -> set[str]:
