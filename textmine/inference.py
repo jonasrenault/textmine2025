@@ -44,11 +44,13 @@ class TransformersInferenceModel(RelationInferenceModel):
             f"In the following text in french, {template} "
             f'Answer with "yes" or "no" only.\n\ntext: {text}'
         )
-
         conversation = [{"role": "user", "content": prompt}]
-        input_ids = self.tokenizer.apply_chat_template(
-            conversation, return_tensors="pt"
-        ).to(self.model.device)
+        formatted_prompt = self.tokenizer.apply_chat_template(
+            conversation, tokenize=False, add_generation_prompt=True
+        )
+        inputs = self.tokenizer(formatted_prompt, return_tensors="pt").to(
+            self.model.device
+        )
 
         streamer = TextIteratorStreamer(
             self.tokenizer, skip_prompt=True, skip_special_tokens=True
@@ -63,12 +65,14 @@ class TransformersInferenceModel(RelationInferenceModel):
         ]
 
         self.model.generate(
-            input_ids,
+            inputs["input_ids"],
             streamer=streamer,
             max_new_tokens=100,
             do_sample=True,
             temperature=0.5,
             eos_token_id=self.terminators + stop_token_ids,
+            pad_token_id=self.tokenizer.eos_token_id,
+            attention_mask=inputs["attention_mask"],
         )
 
         outputs = []
