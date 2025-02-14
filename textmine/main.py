@@ -3,16 +3,14 @@ import logging
 from pathlib import Path
 from typing import Annotated
 
-import pandas as pd
 import typer
-from pydantic import TypeAdapter
 from pydantic.json import pydantic_encoder
 from tqdm import tqdm
 
-from textmine.entities import Entity
 from textmine.evaluate import Metrics, score
 from textmine.inference import TransformersInferenceModel
-from textmine.relations import get_all_possible_relations
+from textmine.relations import get_all_possible_relations, get_template
+from textmine.utils import read_dataframe
 
 ROOT_DIR = Path(__file__).parent.parent
 LOGGER = logging.getLogger(__name__)
@@ -21,8 +19,77 @@ app = typer.Typer()
 
 
 @app.command()
+def predict(
+    text_idx: Annotated[
+        int, typer.Argument(help="Index of row in input_df to evaluate.")
+    ],
+    rel_type: Annotated[str, typer.Argument(help="Type of relation to predict.")],
+    head: Annotated[int | None, typer.Option(help="Head entity id.")] = None,
+    tail: Annotated[int | None, typer.Option(help="Tail entity id.")] = None,
+    input: Annotated[
+        Path,
+        typer.Option(
+            help=(
+                "Path to input evaluation dataframe with text, entities and "
+                "relations columns."
+            ),
+            exists=True,
+            file_okay=True,
+            readable=True,
+        ),
+    ] = ROOT_DIR
+    / "resources/train.csv",
+    model: Annotated[
+        str, typer.Option(help="Transformers model to use for relation prediction.")
+    ] = "mistralai/Mistral-7B-Instruct-v0.3",
+    device: Annotated[
+        str | None, typer.Option(help="Device for relation prediction.")
+    ] = "cuda:0",
+):
+    # Load row from dataframe
+    df = read_dataframe(input)
+    row = df.loc[text_idx]
+
+    # load relation prediction model
+    rel_model = TransformersInferenceModel(
+        model=model,
+        token="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",
+        device=device,
+    )
+
+    # get all possible relations
+    relations = [
+        relation
+        for relation in get_all_possible_relations(row.entities)
+        if relation.type == rel_type
+    ]
+    if head is not None:
+        relations = [relation for relation in relations if relation.head.id == head]
+    if tail is not None:
+        relations = [relation for relation in relations if relation.tail.id == tail]
+
+    if not relations:
+        print(
+            f"Relation ({head if head is not None else '*'}, {rel_type}, "
+            f"{tail if tail is not None else '*'}) does not exist for text {text_idx}"
+        )
+        return
+
+    relation = relations[0]
+    template = get_template(relation)
+    prompt = (
+        f"In the following text in french, {template} "
+        f'Answer with "yes" or "no" only.\n\ntext: {row.text}'
+    )
+    print(f"Predicting relation {relation}")
+    print(f"With prompt:\n{prompt}")
+    prediction, valid = rel_model.predict(row.text, relation)
+    print(f"Answer: {prediction} ({valid})")
+
+
+@app.command()
 def evaluate(
-    input_df: Annotated[
+    input: Annotated[
         Path,
         typer.Argument(
             help=(
@@ -60,17 +127,7 @@ def evaluate(
             Defaults to "cuda:0".
     """
     # Load evaluation df
-    ta = TypeAdapter(list[Entity])
-    eval_df = pd.read_csv(input_df)
-    eval_df = eval_df.set_index("id")
-    eval_df.entities = eval_df.entities.apply(ta.validate_json)
-    eval_df.relations = eval_df.relations.apply(json.loads)
-    if "predictions" not in eval_df.columns:
-        eval_df["predictions"] = pd.Series(dtype="object")
-    else:
-        eval_df.predictions = eval_df.predictions.apply(
-            lambda pred: json.loads(pred) if pd.notna(pred) else pred
-        )
+    eval_df = read_dataframe(input)
 
     # load relation prediction model
     rel_model = TransformersInferenceModel(
@@ -96,7 +153,7 @@ def evaluate(
         predictions = set(
             relation
             for relation in tqdm(relations)
-            if rel_model.predict(row.text, relation)
+            if rel_model.predict(row.text, relation)[1]
         )
         eval_df.at[index, "predictions"] = [
             (relation.head.id, relation.type, relation.tail.id)
@@ -120,7 +177,7 @@ def evaluate(
     eval_df.entities = eval_df.entities.apply(
         lambda ents: json.dumps(ents, default=pydantic_encoder)
     )
-    eval_df.to_csv(input_df)
+    eval_df.to_csv(input)
 
 
 if __name__ == "__main__":

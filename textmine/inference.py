@@ -13,7 +13,7 @@ class RelationInferenceModel(ABC):
     """
 
     @abstractmethod
-    def predict(self, text: str, relation: Relation) -> bool:
+    def predict(self, text: str, relation: Relation) -> tuple[str, bool]:
         pass
 
 
@@ -82,8 +82,8 @@ class TransformersInferenceModel(RelationInferenceModel):
         outputs = []
         for text in streamer:
             outputs.append(text.lower())
-
-        return "yes" in "".join(outputs)
+        output = "".join(outputs)
+        return output, "yes" in output
 
 
 def predict(
@@ -104,7 +104,7 @@ def predict(
     predictions = set(
         relation
         for relation in get_all_possible_relations(entities)
-        if model.predict(text, relation)
+        if model.predict(text, relation)[1]
     )
     return predictions
 
