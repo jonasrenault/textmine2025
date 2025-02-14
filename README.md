@@ -33,7 +33,7 @@ poetry install
 The project installs a CLI command to predict relations from an input dataframe and evaluate predictions. Run
 
 ```console
-textmine --text-id 181 resources/train.csv
+textmine evaluate --text-id 181 resources/train.csv
 ```
 
 (preprend with `poetry run` if using poetry) to predict relations for text with id `181` in `resources/train.csv` dataframe. This will display the macro-f1 score for the predicted texts, as well as save results in a csv file in the same directory as the input file.

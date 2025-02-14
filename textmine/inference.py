@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 
-from textmine.entities import Entity, Mention
+from textmine.entities import Entity
 from textmine.relations import Relation, get_all_possible_relations, get_template
 
 
@@ -56,12 +56,13 @@ class TransformersInferenceModel(RelationInferenceModel):
             self.tokenizer, skip_prompt=True, skip_special_tokens=True
         )
 
-        stop_words = ["Yes", "No"]
+        stop_words = ["Yes", "No", "Oui", "Non"]
         stop_token_ids = [
-            self.tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
-                "input_ids"
-            ].squeeze()
+            token_id
             for stop_word in stop_words
+            for token_id in self.tokenizer(
+                stop_word, return_tensors="pt", add_special_tokens=False
+            )["input_ids"][0]
         ]
 
         # https://github.com/AdrienGuille/TextMine2025/tree/main sets do_sample to False
@@ -83,7 +84,7 @@ class TransformersInferenceModel(RelationInferenceModel):
         for text in streamer:
             outputs.append(text.lower())
         output = "".join(outputs)
-        return output, "yes" in output
+        return output, "yes" in output or "oui" in output
 
 
 def predict(
@@ -107,29 +108,3 @@ def predict(
         if model.predict(text, relation)[1]
     )
     return predictions
-
-
-if __name__ == "__main__":
-    model = TransformersInferenceModel(
-        model="mistralai/Mistral-7B-Instruct-v0.3",
-        token="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",
-        device="cuda:0",
-    )
-    # model = DeepSeekInferenceModel(device="cuda:0")
-    text = 'Un important incendie a fait des ravages dans une forêt en Autriche. Le départ de feu a été provoqué par le mégot d’une cigarette mal éteinte, jetée par un conducteur de poids lourd. Il aura fallu plusieurs bombardiers d’eau ainsi que des efforts au sol pour parvenir à éteindre le brasier. L\'action a été coordonnée par le Major Duverney. Les pompiers se sont équipés de masques sur le visage et de bouteilles d’air comprimé, ainsi que de combinaisons ignifugées pour combattre le feu au sol. L’ONG "ECO+" a déploré cet évènement qu’elle qualifie de criminel car, dans la forêt en partie incendiée, se trouvaient des espèces animales protégées.'  # noqa: E501
-
-    relation = Relation(
-        type="HAS_CATEGORY",
-        head=Entity(
-            id=5,
-            type="MILITARY",
-            mentions=[Mention(value="Duverney", start=330, end=338)],
-        ),
-        tail=Entity(
-            id=14,
-            type="CATEGORY",
-            mentions=[Mention(value="Major", start=324, end=329)],
-        ),
-    )
-    output = model.predict(text, relation)
-    print(output)

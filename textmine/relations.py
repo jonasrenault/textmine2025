@@ -150,4 +150,6 @@ def get_template(relation: Relation) -> str:
             + relation.type
         )
 
-    return TEMPLATES[key].format(head=relation.head.mention, tail=relation.tail.mention)
+    return TEMPLATES[key].format(
+        head=f'"{relation.head.mention}"', tail=f'"{relation.tail.mention}"'
+    )

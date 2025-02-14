@@ -63,6 +63,12 @@ def predict(
         for relation in get_all_possible_relations(row.entities)
         if relation.type == rel_type
     ]
+    print(f"{len(relations)} possible relations of type {rel_type}:")
+    for rel in relations:
+        print(
+            f"({rel.head.id} - {rel.head.mention}, {rel.type},"
+            f" {rel.tail.id} - {rel.tail.mention})"
+        )
     if head is not None:
         relations = [relation for relation in relations if relation.head.id == head]
     if tail is not None:
@@ -113,11 +119,11 @@ def evaluate(
     ] = "cuda:0",
 ):
     """
-    Run relation prediction on input_df. If text_idx is given, only run predictions
-    on specified rows.
+    Run relation prediction on input dataframe. If text_idx is given,
+    only run predictions on specified row.
 
     Args:
-        input_df (Path, optional): evaluation dataframe.
+        input (Path, optional): evaluation dataframe.
             Defaults to ROOT_DIR/"resources/train.csv".
         text_idx (int | None, optional): optional index of specific row to evaluate.
             Defaults to None.
