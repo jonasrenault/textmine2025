@@ -113,7 +113,7 @@ def test_get_template():
             id=1, type="PLACE", mentions=[Mention(value="Lyon", start=64, end=68)]
         ),
     )
-    assert get_template(relation) == "is Arthur Abert located in Lyon?"
+    assert get_template(relation) == 'is "Arthur Abert" located in "Lyon"?'
 
     relation = Relation(
         type="GENDER_MALE",
@@ -132,4 +132,4 @@ def test_get_template():
             ],
         ),
     )
-    assert get_template(relation) == "is Arthur Abert a man?"
+    assert get_template(relation) == 'is "Arthur Abert" a man?'
