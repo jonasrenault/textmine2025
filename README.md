@@ -112,4 +112,6 @@ Les entités annotées dans le texte sont
  ```
 
  * `Anam Destresse` est identifié comme `FEMALE` (`[1, 'GENDER_FEMALE', 1]`) alors que ce n'est pas précisé dans le texte (ni par l'accord, ni par les pronoms).
- * Le `conducteur` de la moto n'est pas identifié comme ayant le contrôle de sa `moto` (la relation `[14, 'HAS_CONTROL_OVER', 2]` n'est pas annotée)
+ * Le `conducteur` de la moto n'est pas identifié comme ayant le contrôle de sa `moto` (la relation `[14, 'HAS_CONTROL_OVER', 2]` n'est pas annotée).
+ * `Anam Destresse` n'est pas identifié comme faisant partie des `blessés` alors que c'est clairement indiqué dans le texte (la relation `[1, 'IS_PART_OF', 5]` n'est pas annotée).
+ * La relation `IS_IN_CONTACT_WITH` est clairement mal définie. Dans cet exemple d'un accident, les protagonistes ne sont pas identifiés comme étant en contact entre eux, alors même qu'ils participent à un même événement.
