@@ -112,4 +112,4 @@ Les entités annotées dans le texte sont
  ```
 
  * `Anam Destresse` est identifié comme `FEMALE` (`[1, 'GENDER_FEMALE', 1]`) alors que ce n'est pas précisé dans le texte (ni par l'accord, ni par les pronoms).
- *
+ * Le `conducteur` de la moto n'est pas identifié comme ayant le contrôle de sa `moto` (la relation `[14, 'HAS_CONTROL_OVER', 2]` n'est pas annotée)
