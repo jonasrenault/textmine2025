@@ -49,7 +49,7 @@ RELATIONS = {
 TEMPLATES = {
     "ACTOR_IS_LOCATED_IN": "is {head} located in {tail}?",
     "PLACE_IS_LOCATED_IN": "is {head} located in {tail}?",
-    "EVENT_IS_LOCATED_IN": "does the event {head} happen in {tail}?",
+    "EVENT_IS_LOCATED_IN": "does the event {head} occur in or on {tail}?",
     "IS_OF_NATIONALITY": "is {head} of {tail} nationaly?",
     "CREATED": "did {head} create {tail}?",
     "HAS_CONTROL_OVER": "does {head} control {tail}?",
