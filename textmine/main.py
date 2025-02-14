@@ -20,8 +20,8 @@ app = typer.Typer()
 
 @app.command()
 def predict(
-    text_idx: Annotated[
-        int, typer.Argument(help="Index of row in input_df to evaluate.")
+    text_id: Annotated[
+        int, typer.Argument(help="Doc id in input dataframe to evaluate.")
     ],
     rel_type: Annotated[str, typer.Argument(help="Type of relation to predict.")],
     head: Annotated[int | None, typer.Option(help="Head entity id.")] = None,
@@ -46,9 +46,25 @@ def predict(
         str | None, typer.Option(help="Device for relation prediction.")
     ] = "cuda:0",
 ):
+    """
+    Run relation prediction on relation of given type `rel_type` and with optional
+    head and tail ids.
+
+    Args:
+        text_id (int): Doc id in input dataframe to evaluate.
+        rel_type (str): Relation type.
+        head (int | None, optional): head entity id. Defaults to None.
+        tail (int | None, optional): tail entity id. Defaults to None.
+        input (Path, optional): path of input dataframe.
+            Defaults to ROOT_DIR/"resources/train.csv".
+        model (str, optional): relation inference model name.
+            Defaults to "mistralai/Mistral-7B-Instruct-v0.3".
+        device (str | None, optional): device for relation prediction.
+            Defaults to "cuda:0".
+    """
     # Load row from dataframe
     df = read_dataframe(input)
-    row = df.loc[text_idx]
+    row = df.loc[text_id]
 
     # load relation prediction model
     rel_model = TransformersInferenceModel(
@@ -77,7 +93,7 @@ def predict(
     if not relations:
         print(
             f"Relation ({head if head is not None else '*'}, {rel_type}, "
-            f"{tail if tail is not None else '*'}) does not exist for text {text_idx}"
+            f"{tail if tail is not None else '*'}) does not exist for text {text_id}"
         )
         return
 
@@ -108,8 +124,8 @@ def evaluate(
         ),
     ] = ROOT_DIR
     / "resources/train.csv",
-    text_idx: Annotated[
-        int | None, typer.Option(help="Index of row in input_df to evaluate.")
+    text_id: Annotated[
+        int | None, typer.Option(help="Doc id in input dataframe to evaluate.")
     ] = None,
     model: Annotated[
         str, typer.Option(help="Transformers model to use for relation prediction.")
@@ -125,7 +141,7 @@ def evaluate(
     Args:
         input (Path, optional): evaluation dataframe.
             Defaults to ROOT_DIR/"resources/train.csv".
-        text_idx (int | None, optional): optional index of specific row to evaluate.
+        text_id (int | None, optional): optional index of specific row to evaluate.
             Defaults to None.
         model (str, optional): relation inference model name.
             Defaults to "mistralai/Mistral-7B-Instruct-v0.3".
@@ -142,10 +158,10 @@ def evaluate(
         device=device,
     )
 
-    # if text_idx is not None, select row with text_idx
+    # if text_id is not None, select row with text_id
     rows = eval_df
-    if text_idx is not None:
-        rows = eval_df.loc[[text_idx]]
+    if text_id is not None:
+        rows = eval_df.loc[[text_id]]
     print(f"Running predictions on {rows.shape[0]} rows.")
 
     # predict relations for each item in the eval dataframe
